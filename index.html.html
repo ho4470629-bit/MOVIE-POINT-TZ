@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next Level Studio PRO</title>
+
+<style>
+body{
+  font-family: Arial;
+  background: #111;
+  color: white;
+  margin:0;
+  padding:0;
+}
+header{
+  background:black;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 4px 10px rgba(255,0,0,0.3);
+}
+header h1{
+  font-size:50px;
+  letter-spacing:5px;
+  text-shadow:3px 3px 0 red,6px 6px 0 black,0 0 20px red;
+}
+.contact{
+  background:#222;
+  padding:10px;
+  text-align:center;
+  font-size:16px;
+  box-shadow: inset 0 0 10px #ff0000;
+}
+.adminpanel{
+  margin:15px;
+  text-align:center;
+}
+form{
+  background:#222;
+  padding:20px;
+  margin:20px auto;
+  display:none; /* form haionekani mpaka admin aingie */
+  border-radius:10px;
+  max-width:500px;
+}
+input, textarea, select{
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+  width:95%;
+}
+button{
+  background:red;
+  color:white;
+  border:none;
+  padding:10px;
+  margin:5px;
+  cursor:pointer;
+  border-radius:5px;
+  transition:0.3s;
+}
+button:hover{
+  background:darkred;
+}
+.delete{
+  background:#555;
+}
+.movies-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;
+  padding:20px;
+}
+.movie{
+  background:#222;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 0 10px rgba(255,0,0,0.4);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.movie:hover{
+  transform: scale(1.03);
+  box-shadow:0 0 20px rgba(255,0,0,0.7);
+}
+.movie img{
+  width:100%;
+  border-bottom:2px solid red;
+}
+.movie h3{
+  margin:10px 0 5px 0;
+}
+.movie .desc{
+  font-size:14px;
+  color:#ccc;
+  padding:0 10px;
+}
+.movie .price{
+  font-weight:bold;
+  padding:5px 10px;
+}
+.movie-buttons{
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+}
+.search-bar{
+  text-align:center;
+  margin:20px 0;
+}
+input#search{
+  padding:10px;
+  width:90%;
+  max-width:400px;
+  border-radius:5px;
+  border:none;
+}
+@media(max-width:600px){
+  header h1{
+    font-size:32px;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NEXT LEVEL STUDIO PRO</h1>
+</header>
+
+<div class="contact">
+  Order kupitia WhatsApp: <b>0768129449</b>
+</div>
+
+<div class="adminpanel">
+  <button onclick="adminLogin()">Admin Login</button>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="search" placeholder="Search movie..." onkeyup="searchMovie()">
+</div>
+
+<form id="movieForm">
+  <input type="text" id="name" placeholder="Movie Name" required><br>
+  <input type="number" id="price" placeholder="Price TZS" required><br>
+  <textarea id="desc" placeholder="Movie description..." required></textarea><br>
+  <input type="file" id="poster" accept="image/*" required><br>
+  <input type="file" id="trailer" accept="video/*"><br>
+  <button type="submit">Post Movie</button>
+</form>
+
+<div class="movies-grid" id="movies"></div>
+
+<script>
+const ADMIN_PASSWORD = "admin123";
+let admin = false; // default si admin
+const form = document.getElementById("movieForm");
+const moviesDiv = document.getElementById("movies");
+let movies = JSON.parse(localStorage.getItem("movies")) || [];
+
+displayMovies();
+
+function adminLogin(){
+  let pass = prompt("Enter admin password");
+  if(pass === ADMIN_PASSWORD){
+    admin = true;
+    form.style.display = "block";
+    alert("Admin mode activated");
+  } else { 
+    alert("Wrong password"); 
+  }
+}
+
+form.addEventListener("submit", function(e){
+  e.preventDefault();
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+  const desc = document.getElementById("desc").value;
+  
+  const posterFile = document.getElementById("poster").files[0];
+  const poster = posterFile ? URL.createObjectURL(posterFile) : "";
+  
+  const trailerFile = document.getElementById("trailer").files[0];
+  const trailer = trailerFile ? URL.createObjectURL(trailerFile) : "";
+  
+  const movie = {name, price, desc, poster, trailer};
+  movies.push(movie);
+  localStorage.setItem("movies", JSON.stringify(movies));
+  displayMovies();
+  form.reset();
+});
+
+function displayMovies(){
+  moviesDiv.innerHTML = "";
+  movies.forEach((movie, index) => {
+    const div = document.createElement("div");
+    div.className = "movie";
+    div.innerHTML = `
+      <img src="${movie.poster}" alt="${movie.name}">
+      <h3>${movie.name}</h3>
+      <p class="desc">${movie.desc}</p>
+      <p class="price">${movie.price} TZS</p>
+      ${movie.trailer ? `<video width="100%" controls><source src="${movie.trailer}" type="video/mp4"></video>` : ""}
+    `;
+    moviesDiv.appendChild(div);
+  });
+}
+
+function searchMovie(){
+  const query = document.getElementById("search").value.toLowerCase();
+  const filtered = movies.filter(m => m.name.toLowerCase().includes(query));
+  moviesDiv.innerHTML = "";
+  filtered.forEach(movie => {
+    const div = document.createElement("div");
+    div.className = "movie";
+    div.innerHTML = `
+      <img src="${movie.poster}" alt="${movie.name}">
+      <h3>${movie.name}</h3>
+      <p class="desc">${movie.desc}</p>
+      <p class="price">${movie.price} TZS</p>
+      ${movie.trailer ? `<video width="100%" controls><source src="${movie.trailer}" type="video/mp4"></video>` : ""}
+    `;
+    moviesDiv.appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>
